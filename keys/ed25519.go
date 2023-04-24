@@ -22,12 +22,12 @@ type ed25519Engine struct {
 }
 
 type ed25519Signer struct {
-	//Signer
+	Signer
 	key ed25519.PrivateKey
 }
 
 type ed25519Verifier struct {
-	//Verifier
+	Verifier
 	key ed25519.PublicKey
 }
 
@@ -143,28 +143,12 @@ func (e *ed25519Signer) KeyId() string {
 	return ed25519KeyId(public)
 }
 
-func (e *ed25519Signer) MarshalPrivateKey() string {
-	return ed25519MarshalPrivateKey(e.key)
-}
-
 func (e *ed25519Signer) SignMessage(msg []byte) ([]byte, error) {
 	return e.key.Sign(rand.Reader, msg, crypto.Hash(0))
 }
 
 func (e *ed25519Signer) SignJson(msg *SignedJson[any]) error {
-	encoded, err := cjson.EncodeCanonical(msg.Signed)
-	if err != nil {
-		return err
-	}
-	signature, err := e.SignMessage(encoded)
-	if err != nil {
-		return err
-	}
-	msg.Signatures = append(msg.Signatures, &SignedJsonSignature{
-		Keyid: e.KeyId(),
-		Sig:   base64.RawURLEncoding.EncodeToString(signature),
-	})
-	return nil
+	return signJson(e, msg)
 }
 
 func (e *ed25519Verifier) PublicKey() crypto.PublicKey {
