@@ -81,6 +81,35 @@ func (e ed25519Engine) UnmarshalPrivateKey(key string) (crypto.PrivateKey, error
 	return privateKey, err
 }
 
+func (e ed25519Engine) MarshalPublicKeyRaw(key crypto.PublicKey) ([]byte, error) {
+	edkey, ok := key.(ed25519.PublicKey)
+	if !ok {
+		return nil, ErrInvalidKey
+	}
+	clone := make([]byte, len(edkey))
+	copy(clone, edkey)
+	return clone, nil
+}
+
+func (e ed25519Engine) UnmarshalPublicKeyRaw(key []byte) (crypto.PublicKey, error) {
+	return ed25519.PublicKey(key), nil
+}
+
+func (e ed25519Engine) MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, error) {
+	edkey, ok := key.(ed25519.PrivateKey)
+	if !ok {
+		return nil, ErrInvalidKey
+	}
+	clone := make([]byte, len(edkey))
+	copy(clone, edkey)
+	return clone, nil
+}
+
+func (e ed25519Engine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error) {
+	_, privateKey, err := ed25519.GenerateKey(bytes.NewReader(key))
+	return privateKey, err
+}
+
 func (e ed25519Engine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	edkey, ok := key.(ed25519.PrivateKey)
 	if !ok {
