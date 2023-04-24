@@ -8,6 +8,12 @@ import (
 
 var testingPgpEngine = NewPgpEngine()
 
+func Test_pgp_GetEngine(t *testing.T) {
+	engine, err := GetEngine("pgp")
+	assert.Nil(t, err)
+	assert.IsType(t, &pgpEngine{}, engine)
+}
+
 func Test_pgpEngine_Schema(t *testing.T) {
 	assert.Equal(t, testingPgpEngine.Schema(), "pgp")
 }
@@ -62,4 +68,28 @@ func Test_pgpEngine_SignVerify(t *testing.T) {
 	msg[0] ^= 0x01
 	res, err = verifier.VerifyMessage(msg, sig)
 	assert.False(t, res)
+}
+
+func Test_pgpEngine_SignVerifyJson(t *testing.T) {
+	privateKey, err := ReadPgpArmorPrivateKey(testGpgRsaPrivateKey)
+	assert.Nil(t, err)
+
+	signer, err := testingPgpEngine.NewSigner(privateKey)
+	assert.Nil(t, err)
+
+	verifier, err := testingPgpEngine.NewVerifier(signer.PublicKey())
+	assert.Nil(t, err)
+
+	root := &SignedJson[any]{
+		Signed: &TestMessage{
+			Hello: "WORLD",
+		},
+	}
+
+	err = signer.SignJson(root)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(root.Signatures))
+
+	res, err := verifier.VerifyJson(root)
+	assert.True(t, res)
 }

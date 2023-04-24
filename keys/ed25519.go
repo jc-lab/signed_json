@@ -6,7 +6,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/secure-systems-lab/go-securesystemslib/cjson"
 )
 
 func init() {
@@ -168,23 +167,7 @@ func (e *ed25519Verifier) VerifyMessage(msg []byte, sig []byte) (bool, error) {
 }
 
 func (e *ed25519Verifier) VerifyJson(msg *SignedJson[any]) (bool, error) {
-	encoded, err := cjson.EncodeCanonical(msg.Signed)
-	if err != nil {
-		return false, err
-	}
-	keyid := ed25519KeyId(e.key)
-	for _, signature := range msg.Signatures {
-		sigRaw, err := base64.RawURLEncoding.DecodeString(signature.Sig)
-		if err != nil {
-			return false, err
-		}
-
-		if signature.Keyid == keyid {
-			return e.VerifyMessage(encoded, sigRaw)
-		}
-	}
-
-	return false, ErrInvalidKey
+	return verifyJson(e, msg)
 }
 
 func ed25519MarshalPrivateKey(key ed25519.PrivateKey) string {

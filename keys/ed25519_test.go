@@ -10,6 +10,12 @@ import (
 
 var testingEd25519Engine = NewEd25519Engine()
 
+func Test_ed25519_GetEngine(t *testing.T) {
+	engine, err := GetEngine("ed25519")
+	assert.Nil(t, err)
+	assert.IsType(t, &ed25519Engine{}, engine)
+}
+
 func Test_ed25519Engine_Schema(t *testing.T) {
 	assert.Equal(t, testingEd25519Engine.Schema(), "ed25519")
 }
