@@ -30,16 +30,16 @@ type ed25519Verifier struct {
 	key ed25519.PublicKey
 }
 
-func (e ed25519Engine) Schema() string {
+func (e *ed25519Engine) Schema() string {
 	return "ed25519"
 }
 
-func (e ed25519Engine) GenerateKeyPair() (crypto.PrivateKey, crypto.PublicKey, error) {
+func (e *ed25519Engine) GenerateKeyPair() (crypto.PrivateKey, crypto.PublicKey, error) {
 	public, private, err := ed25519.GenerateKey(rand.Reader)
 	return private, public, err
 }
 
-func (e ed25519Engine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.PublicKey, error) {
+func (e *ed25519Engine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.PublicKey, error) {
 	edkey, ok := privateKey.(ed25519.PrivateKey)
 	if !ok {
 		return nil, ErrInvalidKey
@@ -47,7 +47,7 @@ func (e ed25519Engine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.P
 	return edkey.Public(), nil
 }
 
-func (e ed25519Engine) MarshalPublicKey(key crypto.PublicKey) (string, error) {
+func (e *ed25519Engine) MarshalPublicKey(key crypto.PublicKey) (string, error) {
 	edkey, ok := key.(ed25519.PublicKey)
 	if !ok {
 		return "", ErrInvalidKey
@@ -55,7 +55,7 @@ func (e ed25519Engine) MarshalPublicKey(key crypto.PublicKey) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(edkey), nil
 }
 
-func (e ed25519Engine) UnmarshalPublicKey(key string) (crypto.PublicKey, error) {
+func (e *ed25519Engine) UnmarshalPublicKey(key string) (crypto.PublicKey, error) {
 	raw, err := base64.RawURLEncoding.DecodeString(key)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (e ed25519Engine) UnmarshalPublicKey(key string) (crypto.PublicKey, error) 
 	return ed25519.PublicKey(raw), nil
 }
 
-func (e ed25519Engine) MarshalPrivateKey(key crypto.PrivateKey) (string, error) {
+func (e *ed25519Engine) MarshalPrivateKey(key crypto.PrivateKey) (string, error) {
 	edkey, ok := key.(ed25519.PrivateKey)
 	if !ok {
 		return "", ErrInvalidKey
@@ -71,7 +71,7 @@ func (e ed25519Engine) MarshalPrivateKey(key crypto.PrivateKey) (string, error) 
 	return ed25519MarshalPrivateKey(edkey), nil
 }
 
-func (e ed25519Engine) UnmarshalPrivateKey(key string) (crypto.PrivateKey, error) {
+func (e *ed25519Engine) UnmarshalPrivateKey(key string) (crypto.PrivateKey, error) {
 	raw, err := base64.RawURLEncoding.DecodeString(key)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (e ed25519Engine) UnmarshalPrivateKey(key string) (crypto.PrivateKey, error
 	return privateKey, err
 }
 
-func (e ed25519Engine) MarshalPublicKeyRaw(key crypto.PublicKey) ([]byte, error) {
+func (e *ed25519Engine) MarshalPublicKeyRaw(key crypto.PublicKey) ([]byte, error) {
 	edkey, ok := key.(ed25519.PublicKey)
 	if !ok {
 		return nil, ErrInvalidKey
@@ -90,11 +90,11 @@ func (e ed25519Engine) MarshalPublicKeyRaw(key crypto.PublicKey) ([]byte, error)
 	return clone, nil
 }
 
-func (e ed25519Engine) UnmarshalPublicKeyRaw(key []byte) (crypto.PublicKey, error) {
+func (e *ed25519Engine) UnmarshalPublicKeyRaw(key []byte) (crypto.PublicKey, error) {
 	return ed25519.PublicKey(key), nil
 }
 
-func (e ed25519Engine) MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, error) {
+func (e *ed25519Engine) MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, error) {
 	edkey, ok := key.(ed25519.PrivateKey)
 	if !ok {
 		return nil, ErrInvalidKey
@@ -104,12 +104,12 @@ func (e ed25519Engine) MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, erro
 	return clone, nil
 }
 
-func (e ed25519Engine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error) {
+func (e *ed25519Engine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error) {
 	_, privateKey, err := ed25519.GenerateKey(bytes.NewReader(key))
 	return privateKey, err
 }
 
-func (e ed25519Engine) KeyId(key crypto.PublicKey) (string, error) {
+func (e *ed25519Engine) KeyId(key crypto.PublicKey) (string, error) {
 	edkey, ok := key.(ed25519.PublicKey)
 	if !ok {
 		return "", ErrInvalidKey
@@ -117,7 +117,7 @@ func (e ed25519Engine) KeyId(key crypto.PublicKey) (string, error) {
 	return ed25519KeyId(edkey), nil
 }
 
-func (e ed25519Engine) NewSigner(key crypto.PrivateKey) (Signer, error) {
+func (e *ed25519Engine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	edkey, ok := key.(ed25519.PrivateKey)
 	if !ok {
 		return nil, ErrInvalidKey
@@ -127,7 +127,7 @@ func (e ed25519Engine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	}, nil
 }
 
-func (e ed25519Engine) NewVerifier(key crypto.PublicKey) (Verifier, error) {
+func (e *ed25519Engine) NewVerifier(key crypto.PublicKey) (Verifier, error) {
 	edkey, ok := key.(ed25519.PublicKey)
 	if !ok {
 		return nil, ErrInvalidKey
