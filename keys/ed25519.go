@@ -109,6 +109,14 @@ func (e ed25519Engine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, er
 	return privateKey, err
 }
 
+func (e ed25519Engine) KeyId(key crypto.PublicKey) (string, error) {
+	edkey, ok := key.(ed25519.PublicKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return ed25519KeyId(edkey), nil
+}
+
 func (e ed25519Engine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	edkey, ok := key.(ed25519.PrivateKey)
 	if !ok {

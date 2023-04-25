@@ -66,6 +66,14 @@ func Test_ed25519Engine_SignVerify(t *testing.T) {
 	assert.False(t, res)
 }
 
+func Test_ed25519Engine_keyId(t *testing.T) {
+	publicKey, _, err := ed25519.GenerateKey(strings.NewReader("00001-deterministic-buffer-for-key-generation"))
+	assert.Nil(t, err)
+
+	keyId, _ := testingEd25519Engine.KeyId(publicKey)
+	assert.Equal(t, "EUC_wk4IQSWkp2QFLzUWXQIFt_3R3oMa2O8fzNpfuzU", keyId)
+}
+
 func Test_ed25519Engine_SignVerifyJson(t *testing.T) {
 	privateKeyRaw, _ := hex.DecodeString("30303030312d64657465726d696e69737469632d6275666665722d666f722d6b")
 	privateKey, err := testingEd25519Engine.UnmarshalPrivateKeyRaw(privateKeyRaw)

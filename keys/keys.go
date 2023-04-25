@@ -39,6 +39,7 @@ type Engine interface {
 	UnmarshalPublicKeyRaw(key []byte) (crypto.PublicKey, error)
 	MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, error)
 	UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error)
+	KeyId(key crypto.PublicKey) (string, error)
 	NewSigner(key crypto.PrivateKey) (Signer, error)
 	NewVerifier(key crypto.PublicKey) (Verifier, error)
 }

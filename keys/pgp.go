@@ -188,6 +188,14 @@ func (e pgpEngine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error)
 	}, nil
 }
 
+func (e pgpEngine) KeyId(key crypto.PublicKey) (string, error) {
+	edkey, ok := key.(*pgpPublicKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return pgpKeyId(edkey.key), nil
+}
+
 func (e pgpEngine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	pgpKey, ok := key.(*pgpPrivateKey)
 	if !ok {
