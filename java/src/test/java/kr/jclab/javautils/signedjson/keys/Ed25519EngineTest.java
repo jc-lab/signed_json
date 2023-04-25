@@ -13,10 +13,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class Ed25519EngineTest {
     private final Ed25519Engine engine = new Ed25519Engine();
+    private final String SAMPLE_KEY_1_PUBLIC = "QkF2rXywcANez0q7Yk-U_Yslfcg7ffOkurkbd7d6Vn0";
 
     @Test
     void getSchema() {
         assertThat(engine.getSchema()).isEqualTo("ed25519");
+    }
+
+    @Test
+    void marshalPublicKey() {
+        PublicKey publicKey = samplePublicKey();
+        String encodedPublicKey = engine.marshalPublicKey(publicKey);
+        assertThat(encodedPublicKey).isEqualTo(SAMPLE_KEY_1_PUBLIC);
+
+        PublicKey rekey = engine.unmarshalPublicKey(encodedPublicKey);
+        assertThat(rekey).isNotNull().isOfAnyClassIn(BCEdDSAPublicKey.class, PublicKey.class);
     }
 
     @Test
@@ -63,6 +74,6 @@ class Ed25519EngineTest {
     }
 
     PublicKey samplePublicKey() {
-        return engine.unmarshalPublicKey("QkF2rXywcANez0q7Yk-U_Yslfcg7ffOkurkbd7d6Vn0");
+        return engine.unmarshalPublicKey(SAMPLE_KEY_1_PUBLIC);
     }
 }

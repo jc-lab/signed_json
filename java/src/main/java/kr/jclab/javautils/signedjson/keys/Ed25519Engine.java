@@ -21,6 +21,12 @@ public class Ed25519Engine implements KeyEngine {
     }
 
     @Override
+    public String marshalPublicKey(PublicKey publicKey) throws InvalidKeyException {
+        BCEdDSAPublicKey edPublicKey = toBCEdDSAPublicKey(publicKey);
+        return StaticHolder.getEncoder().encodeToString(edPublicKey.getPointEncoding());
+    }
+
+    @Override
     public PublicKey unmarshalPublicKey(String input) throws InvalidKeyException {
         byte[] rawKey = StaticHolder.getDecoder().decode(input);
         if (!Ed25519.validatePublicKeyFull(rawKey, 0)) {
@@ -35,7 +41,8 @@ public class Ed25519Engine implements KeyEngine {
     }
 
     @Override
-    public Verifier newVerifier(PublicKey publicKey) {
+    public Verifier newVerifier(PublicKey publicKey) throws InvalidKeyException {
+        toBCEdDSAPublicKey(publicKey);
         try {
             Signature.getInstance("Ed25519", StaticHolder.getBcProvider());
         } catch (NoSuchAlgorithmException e) {
@@ -50,7 +57,7 @@ public class Ed25519Engine implements KeyEngine {
         return HashUtil.sha256Encode(edPublicKey.getPointEncoding());
     }
 
-    static BCEdDSAPublicKey toBCEdDSAPublicKey(PublicKey publicKey) {
+    static BCEdDSAPublicKey toBCEdDSAPublicKey(PublicKey publicKey) throws InvalidKeyException {
         if (!(publicKey instanceof BCEdDSAPublicKey)) {
             throw new InvalidKeyException("unknown class: " + publicKey.getClass().getName());
         }

@@ -5,7 +5,6 @@ import kr.jclab.javautils.signedjson.StaticHolder;
 import kr.jclab.javautils.signedjson.Verifier;
 import kr.jclab.javautils.signedjson.exception.InvalidKeyException;
 import org.bouncycastle.bcpg.ArmoredInputStream;
-import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
@@ -22,22 +21,44 @@ public class PgpEngine implements KeyEngine {
     }
 
     @Override
+    public String marshalPublicKey(PublicKey publicKey) throws InvalidKeyException {
+        PgpPublicKey pgpPublicKey = toPgpPublicKey(publicKey);
+        try {
+            return StaticHolder.getEncoder().encodeToString(pgpPublicKey.getKeyRing().getEncoded());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public PublicKey unmarshalPublicKey(String input) {
+        JcaPGPPublicKeyRingCollection collection = null;
+
         if (input.startsWith("-----")) {
-            JcaPGPPublicKeyRingCollection collection;
             try (ArmoredInputStream inputStream = new ArmoredInputStream(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)))) {
                 collection = new JcaPGPPublicKeyRingCollection(inputStream);
             } catch (IOException | PGPException e) {
                 throw new RuntimeException(e);
             }
-            PGPPublicKeyRing keyRing = collection.iterator().next();
-            return new PgpPublicKey(keyRing);
+        } else {
+            byte[] raw = StaticHolder.getDecoder().decode(input);
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(raw)) {
+                collection = new JcaPGPPublicKeyRingCollection(inputStream);
+            } catch (IOException | PGPException e) {
+                throw new RuntimeException(e);
+            }
         }
-        return null;
+
+        if (collection == null) {
+            throw new InvalidKeyException("unknown key format");
+        }
+
+        PGPPublicKeyRing keyRing = collection.iterator().next();
+        return new PgpPublicKey(keyRing);
     }
 
     @Override
-    public Verifier newVerifier(PublicKey publicKey) {
+    public Verifier newVerifier(PublicKey publicKey) throws InvalidKeyException {
         PgpPublicKey pgpPublicKey = toPgpPublicKey(publicKey);
         return new PgpVerifier(this, pgpPublicKey);
     }
@@ -48,7 +69,7 @@ public class PgpEngine implements KeyEngine {
         return StaticHolder.getEncoder().encodeToString(pgpPublicKey.getKeyRing().getPublicKey().getFingerprint());
     }
 
-    static PgpPublicKey toPgpPublicKey(PublicKey publicKey) {
+    static PgpPublicKey toPgpPublicKey(PublicKey publicKey) throws InvalidKeyException {
         if (!(publicKey instanceof PgpPublicKey)) {
             throw new InvalidKeyException("unknown class: " + publicKey.getClass().getName());
         }

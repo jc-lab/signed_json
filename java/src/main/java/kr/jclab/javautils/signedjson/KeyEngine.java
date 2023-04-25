@@ -6,8 +6,9 @@ import java.security.PublicKey;
 
 public interface KeyEngine {
     String getSchema();
+    String marshalPublicKey(PublicKey publicKey) throws InvalidKeyException;
     PublicKey unmarshalPublicKey(String input) throws InvalidKeyException;
-    Verifier newVerifier(PublicKey publicKey);
+    Verifier newVerifier(PublicKey publicKey) throws InvalidKeyException;
     String getKeyId(PublicKey publicKey);
 
     static KeyEngine getEngine(String schema) {
