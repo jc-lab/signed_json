@@ -1,6 +1,7 @@
 package kr.jclab.javautils.signedjson.keys;
 
 import kr.jclab.javautils.signedjson.KeyEngine;
+import kr.jclab.javautils.signedjson.Signer;
 import kr.jclab.javautils.signedjson.StaticHolder;
 import kr.jclab.javautils.signedjson.Verifier;
 import kr.jclab.javautils.signedjson.exception.InvalidKeyException;
@@ -9,10 +10,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.jcajce.spec.RawEncodedKeySpec;
 import org.bouncycastle.math.ec.rfc8032.Ed25519;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Signature;
+import java.security.*;
 
 public class Ed25519Engine implements KeyEngine {
     @Override
@@ -38,6 +36,11 @@ public class Ed25519Engine implements KeyEngine {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Signer newSigner(PrivateKey privateKey) throws InvalidKeyException {
+        return null;
     }
 
     @Override

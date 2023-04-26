@@ -1,6 +1,7 @@
 package kr.jclab.javautils.signedjson.keys;
 
 import kr.jclab.javautils.signedjson.KeyEngine;
+import kr.jclab.javautils.signedjson.Signer;
 import kr.jclab.javautils.signedjson.StaticHolder;
 import kr.jclab.javautils.signedjson.Verifier;
 import kr.jclab.javautils.signedjson.exception.InvalidKeyException;
@@ -12,6 +13,7 @@ import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class PgpEngine implements KeyEngine {
@@ -55,6 +57,11 @@ public class PgpEngine implements KeyEngine {
 
         PGPPublicKeyRing keyRing = collection.iterator().next();
         return new PgpPublicKey(keyRing);
+    }
+
+    @Override
+    public Signer newSigner(PrivateKey privateKey) throws InvalidKeyException {
+        return null;
     }
 
     @Override
