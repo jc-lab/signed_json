@@ -47,7 +47,7 @@ func (e *hmacEngine) GenerateKeyPair() (crypto.PrivateKey, crypto.PublicKey, err
 	buffer := make([]byte, 32)
 	rand.Read(buffer)
 	return &HmacKey{
-		Algorithm: "SHA256",
+		Algorithm: "sha256",
 		KeyId:     "",
 		SecretKey: buffer,
 	}, nil, nil
@@ -95,6 +95,22 @@ func (e *hmacEngine) KeyId(key crypto.PublicKey) (string, error) {
 		return "", ErrInvalidKey
 	}
 	return hmacKeyId(hmacKey), nil
+}
+
+func (e *hmacEngine) KeyTypeByPublicKey(key crypto.PublicKey) (string, error) {
+	hmacKey, ok := key.(*HmacKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return hmacKey.Algorithm, nil
+}
+
+func (e *hmacEngine) KeyTypeByPrivateKey(key crypto.PrivateKey) (string, error) {
+	hmacKey, ok := key.(*HmacKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return hmacKey.Algorithm, nil
 }
 
 func (e *hmacEngine) NewSigner(key crypto.PrivateKey) (Signer, error) {
@@ -171,13 +187,13 @@ func hmacKeyId(key *HmacKey) string {
 
 func getHashAlgorithm(name string) (func() hash.Hash, error) {
 	name = strings.Replace(name, "-", "", -1)
-	name = strings.ToUpper(name)
+	name = strings.ToLower(name)
 	switch name {
-	case "SHA256":
+	case "sha256":
 		return crypto.SHA256.New, nil
-	case "SHA384":
+	case "sha384":
 		return crypto.SHA384.New, nil
-	case "SHA512":
+	case "sha512":
 		return crypto.SHA512.New, nil
 	}
 	return nil, errors.New("unknown algorithm: " + name)

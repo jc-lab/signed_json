@@ -196,6 +196,22 @@ func (e *pgpEngine) KeyId(key crypto.PublicKey) (string, error) {
 	return pgpKeyId(edkey.key), nil
 }
 
+func (e *pgpEngine) KeyTypeByPublicKey(key crypto.PublicKey) (string, error) {
+	_, ok := key.(*pgpPublicKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return "pgp", nil
+}
+
+func (e *pgpEngine) KeyTypeByPrivateKey(key crypto.PrivateKey) (string, error) {
+	_, ok := key.(*pgpPrivateKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return "pgp", nil
+}
+
 func (e *pgpEngine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	pgpKey, ok := key.(*pgpPrivateKey)
 	if !ok {

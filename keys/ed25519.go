@@ -117,6 +117,22 @@ func (e *ed25519Engine) KeyId(key crypto.PublicKey) (string, error) {
 	return ed25519KeyId(edkey), nil
 }
 
+func (e *ed25519Engine) KeyTypeByPublicKey(key crypto.PublicKey) (string, error) {
+	_, ok := key.(ed25519.PublicKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return "ed25519", nil
+}
+
+func (e *ed25519Engine) KeyTypeByPrivateKey(key crypto.PrivateKey) (string, error) {
+	_, ok := key.(ed25519.PrivateKey)
+	if !ok {
+		return "", ErrInvalidKey
+	}
+	return "ed25519", nil
+}
+
 func (e *ed25519Engine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 	edkey, ok := key.(ed25519.PrivateKey)
 	if !ok {
