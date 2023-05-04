@@ -38,7 +38,7 @@ func NewJclabPrs2301PrivateKey(curveEngine engine.CurveEngine, keyType string, S
 	}, nil
 }
 
-func NewJclabPrs2301PublicKey(curveEngine engine.CurveEngine, keyType string, W1 []byte) (crypto.PrivateKey, error) {
+func NewJclabPrs2301PublicKey(curveEngine engine.CurveEngine, keyType string, W1 []byte) (crypto.PublicKey, error) {
 	return &jclabPrs2301PublicKey{
 		curve:   curveEngine,
 		keyType: keyType,
