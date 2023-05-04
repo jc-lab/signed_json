@@ -5,24 +5,32 @@ import (
 	"github.com/jc-lab/jclab-prs-2301/engine"
 )
 
-type jclabPrs2301PrivateKey struct {
+type JclabPrs2301PrivateKey struct {
 	keyType string
 	curve   engine.CurveEngine
 	s       []byte
 	w1      []byte
 }
 
-type jclabPrs2301PublicKey struct {
+type JclabPrs2301PublicKey struct {
 	keyType string
 	curve   engine.CurveEngine
 	w1      []byte
 }
 
-type jclabPrs2301ResignKey struct {
+type JclabPrs2301ResignKey struct {
 	keyType string
 	curve   engine.CurveEngine
 	rk      []byte
 	w1      []byte
+}
+
+func (k *JclabPrs2301PrivateKey) GetS() []byte {
+	return k.s
+}
+
+func (k *JclabPrs2301PublicKey) GetW1() []byte {
+	return k.w1
 }
 
 func NewJclabPrs2301PrivateKey(curveEngine engine.CurveEngine, keyType string, S []byte) (crypto.PrivateKey, error) {
@@ -30,7 +38,7 @@ func NewJclabPrs2301PrivateKey(curveEngine engine.CurveEngine, keyType string, S
 	if err != nil {
 		return nil, err
 	}
-	return &jclabPrs2301PrivateKey{
+	return &JclabPrs2301PrivateKey{
 		curve:   curveEngine,
 		keyType: keyType,
 		s:       S,
@@ -39,7 +47,7 @@ func NewJclabPrs2301PrivateKey(curveEngine engine.CurveEngine, keyType string, S
 }
 
 func NewJclabPrs2301PublicKey(curveEngine engine.CurveEngine, keyType string, W1 []byte) (crypto.PublicKey, error) {
-	return &jclabPrs2301PublicKey{
+	return &JclabPrs2301PublicKey{
 		curve:   curveEngine,
 		keyType: keyType,
 		w1:      W1,
@@ -47,7 +55,7 @@ func NewJclabPrs2301PublicKey(curveEngine engine.CurveEngine, keyType string, W1
 }
 
 func NewJclabPrs2301ResignKey(curveEngine engine.CurveEngine, keyType string, RK []byte, W1 []byte) (crypto.PrivateKey, error) {
-	return &jclabPrs2301ResignKey{
+	return &JclabPrs2301ResignKey{
 		curve:   curveEngine,
 		keyType: keyType,
 		rk:      RK,
@@ -64,7 +72,7 @@ func NewJclabPrs2301Bls12381PrivateKey(S []byte) (crypto.PrivateKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &jclabPrs2301PrivateKey{
+	return &JclabPrs2301PrivateKey{
 		curve:   curveEngine,
 		keyType: "bls12-381",
 		s:       S,
@@ -77,7 +85,7 @@ func NewJclabPrs2301Bls12381PublicKey(W1 []byte) (crypto.PrivateKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &jclabPrs2301PublicKey{
+	return &JclabPrs2301PublicKey{
 		curve:   curveEngine,
 		keyType: "bls12-381",
 		w1:      W1,
@@ -89,7 +97,7 @@ func NewJclabPrs2301Bls12381ResignKey(RK []byte, W1 []byte) (crypto.PrivateKey, 
 	if err != nil {
 		return nil, err
 	}
-	return &jclabPrs2301ResignKey{
+	return &JclabPrs2301ResignKey{
 		curve:   curveEngine,
 		keyType: "bls12-381",
 		rk:      RK,
@@ -97,16 +105,16 @@ func NewJclabPrs2301Bls12381ResignKey(RK []byte, W1 []byte) (crypto.PrivateKey, 
 	}, nil
 }
 
-func jclabPrs2301PrivateToPublic(key *jclabPrs2301PrivateKey) *jclabPrs2301PublicKey {
-	return &jclabPrs2301PublicKey{
+func jclabPrs2301PrivateToPublic(key *JclabPrs2301PrivateKey) *JclabPrs2301PublicKey {
+	return &JclabPrs2301PublicKey{
 		curve:   key.curve,
 		keyType: key.keyType,
 		w1:      key.w1,
 	}
 }
 
-func jclabPrs2301RkToPublic(key *jclabPrs2301ResignKey) *jclabPrs2301PublicKey {
-	return &jclabPrs2301PublicKey{
+func jclabPrs2301RkToPublic(key *JclabPrs2301ResignKey) *JclabPrs2301PublicKey {
+	return &JclabPrs2301PublicKey{
 		curve:   key.curve,
 		keyType: key.keyType,
 		w1:      key.w1,

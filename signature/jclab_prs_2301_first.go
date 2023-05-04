@@ -18,13 +18,13 @@ type jclabPrs2301FirstEngine struct {
 
 type jclabPrs2301FirstSigner struct {
 	Signer
-	key   *jclabPrs2301PrivateKey
+	key   *JclabPrs2301PrivateKey
 	keyId string
 }
 
 type jclabPrs2301FirstVerifier struct {
 	Verifier
-	key   *jclabPrs2301PublicKey
+	key   *JclabPrs2301PublicKey
 	keyId string
 }
 
@@ -33,7 +33,7 @@ func (e *jclabPrs2301FirstEngine) Schema() string {
 }
 
 func (e *jclabPrs2301FirstEngine) KeyTypeByPublicKey(key crypto.PublicKey) (string, error) {
-	keyImpl, ok := key.(*jclabPrs2301PublicKey)
+	keyImpl, ok := key.(*JclabPrs2301PublicKey)
 	if !ok {
 		return "", ErrInvalidKey
 	}
@@ -41,7 +41,7 @@ func (e *jclabPrs2301FirstEngine) KeyTypeByPublicKey(key crypto.PublicKey) (stri
 }
 
 func (e *jclabPrs2301FirstEngine) KeyTypeByPrivateKey(key crypto.PrivateKey) (string, error) {
-	keyImpl, ok := key.(*jclabPrs2301PrivateKey)
+	keyImpl, ok := key.(*JclabPrs2301PrivateKey)
 	if !ok {
 		return "", ErrInvalidKey
 	}
@@ -49,7 +49,7 @@ func (e *jclabPrs2301FirstEngine) KeyTypeByPrivateKey(key crypto.PrivateKey) (st
 }
 
 func (e *jclabPrs2301FirstEngine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.PublicKey, error) {
-	keyImpl, ok := privateKey.(*jclabPrs2301PrivateKey)
+	keyImpl, ok := privateKey.(*JclabPrs2301PrivateKey)
 	if !ok {
 		return nil, ErrInvalidKey
 	}
@@ -57,7 +57,7 @@ func (e *jclabPrs2301FirstEngine) GeneratePublicKey(privateKey crypto.PrivateKey
 }
 
 func (e *jclabPrs2301FirstEngine) NewSigner(key crypto.PrivateKey, keyId string) (Signer, error) {
-	keyImpl, ok := key.(*jclabPrs2301PrivateKey)
+	keyImpl, ok := key.(*JclabPrs2301PrivateKey)
 	if !ok {
 		return nil, ErrInvalidKey
 	}
@@ -68,7 +68,7 @@ func (e *jclabPrs2301FirstEngine) NewSigner(key crypto.PrivateKey, keyId string)
 }
 
 func (e *jclabPrs2301FirstEngine) NewVerifier(key crypto.PublicKey, keyId string) (Verifier, error) {
-	keyImpl, ok := key.(*jclabPrs2301PublicKey)
+	keyImpl, ok := key.(*JclabPrs2301PublicKey)
 	if !ok {
 		return nil, ErrInvalidKey
 	}
