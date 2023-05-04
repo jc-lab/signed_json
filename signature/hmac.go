@@ -1,11 +1,9 @@
-package keys
+package signature
 
 import (
 	"bytes"
 	"crypto"
 	"crypto/hmac"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"hash"
 	"strings"
@@ -25,76 +23,23 @@ type hmacEngine struct {
 
 type hmacSigner struct {
 	Signer
-	key *HmacKey
+	key   *HmacKey
+	keyId string
 }
 
 type hmacVerifier struct {
 	Verifier
-	key *HmacKey
+	key   *HmacKey
+	keyId string
 }
 
 type HmacKey struct {
 	Algorithm string
-	KeyId     string
 	SecretKey []byte
 }
 
 func (e *hmacEngine) Schema() string {
 	return "hmac"
-}
-
-func (e *hmacEngine) GenerateKeyPair() (crypto.PrivateKey, crypto.PublicKey, error) {
-	buffer := make([]byte, 32)
-	rand.Read(buffer)
-	return &HmacKey{
-		Algorithm: "sha256",
-		KeyId:     "",
-		SecretKey: buffer,
-	}, nil, nil
-}
-
-func (e *hmacEngine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.PublicKey, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) MarshalPublicKey(key crypto.PublicKey) (string, error) {
-	return "", errors.New("not support")
-}
-
-func (e *hmacEngine) UnmarshalPublicKey(key string) (crypto.PublicKey, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) MarshalPrivateKey(key crypto.PrivateKey) (string, error) {
-	return "", errors.New("not support")
-}
-
-func (e *hmacEngine) UnmarshalPrivateKey(key string) (crypto.PrivateKey, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) MarshalPublicKeyRaw(key crypto.PublicKey) ([]byte, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) UnmarshalPublicKeyRaw(key []byte) (crypto.PublicKey, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error) {
-	return nil, errors.New("not support")
-}
-
-func (e *hmacEngine) KeyId(key crypto.PublicKey) (string, error) {
-	hmacKey, ok := key.(*HmacKey)
-	if !ok {
-		return "", ErrInvalidKey
-	}
-	return hmacKeyId(hmacKey), nil
 }
 
 func (e *hmacEngine) KeyTypeByPublicKey(key crypto.PublicKey) (string, error) {
@@ -113,23 +58,25 @@ func (e *hmacEngine) KeyTypeByPrivateKey(key crypto.PrivateKey) (string, error) 
 	return hmacKey.Algorithm, nil
 }
 
-func (e *hmacEngine) NewSigner(key crypto.PrivateKey) (Signer, error) {
+func (e *hmacEngine) NewSigner(key crypto.PrivateKey, keyId string) (Signer, error) {
 	hmacKey, ok := key.(*HmacKey)
 	if !ok {
 		return nil, ErrInvalidKey
 	}
 	return &hmacSigner{
-		key: hmacKey,
+		key:   hmacKey,
+		keyId: keyId,
 	}, nil
 }
 
-func (e *hmacEngine) NewVerifier(key crypto.PublicKey) (Verifier, error) {
+func (e *hmacEngine) NewVerifier(key crypto.PublicKey, keyId string) (Verifier, error) {
 	hmacKey, ok := key.(*HmacKey)
 	if !ok {
 		return nil, ErrInvalidKey
 	}
 	return &hmacVerifier{
-		key: hmacKey,
+		key:   hmacKey,
+		keyId: keyId,
 	}, nil
 }
 
@@ -142,7 +89,7 @@ func (e *hmacSigner) PublicKey() crypto.PublicKey {
 }
 
 func (e *hmacSigner) KeyId() string {
-	return hmacKeyId(e.key)
+	return e.keyId
 }
 
 func (e *hmacSigner) SignMessage(msg []byte) ([]byte, error) {
@@ -158,11 +105,7 @@ func (e *hmacVerifier) PublicKey() crypto.PublicKey {
 }
 
 func (e *hmacVerifier) KeyId() string {
-	return hmacKeyId(e.key)
-}
-
-func (e *hmacVerifier) MarshalPublicKey() string {
-	return ""
+	return e.keyId
 }
 
 func (e *hmacVerifier) VerifyMessage(msg []byte, sig []byte) (bool, error) {
@@ -175,14 +118,6 @@ func (e *hmacVerifier) VerifyMessage(msg []byte, sig []byte) (bool, error) {
 
 func (e *hmacVerifier) VerifyJson(msg *SignedJson[any]) (bool, error) {
 	return verifyJson(e, msg)
-}
-
-func hmacMarshalPrivateKey(key *HmacKey) string {
-	return base64.RawURLEncoding.EncodeToString(key.SecretKey[:32])
-}
-
-func hmacKeyId(key *HmacKey) string {
-	return key.KeyId
 }
 
 func getHashAlgorithm(name string) (func() hash.Hash, error) {

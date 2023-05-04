@@ -1,4 +1,4 @@
-package keys
+package signature
 
 import (
 	"bytes"
@@ -34,12 +34,14 @@ type pgpSigner struct {
 	Signer
 	key       *openpgp.Entity
 	publicKey *pgpPublicKey
+	keyId     string
 }
 
 type pgpVerifier struct {
 	Verifier
-	key  *openpgp.Entity
-	keys openpgp.EntityList
+	key   *openpgp.Entity
+	keys  openpgp.EntityList
+	keyId string
 }
 
 func ReadPgpArmorPrivateKey(input string) (crypto.PrivateKey, error) {
@@ -66,12 +68,20 @@ func ReadPgpArmorPublicKey(input string) (crypto.PublicKey, error) {
 	}, nil
 }
 
-func (e *pgpEngine) Schema() string {
-	return "pgp"
+func PgpPublicKeySerialize(key crypto.PublicKey) ([]byte, error) {
+	pgpKey, ok := key.(*pgpPublicKey)
+	if !ok {
+		return nil, ErrInvalidKey
+	}
+	var buf bytes.Buffer
+	if err := pgpKey.key.Serialize(&buf); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
-func (e *pgpEngine) GenerateKeyPair() (crypto.PrivateKey, crypto.PublicKey, error) {
-	return nil, nil, ErrGpgNotSupported
+func (e *pgpEngine) Schema() string {
+	return "pgp"
 }
 
 func (e *pgpEngine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.PublicKey, error) {
@@ -90,112 +100,6 @@ func (e *pgpEngine) GeneratePublicKey(privateKey crypto.PrivateKey) (crypto.Publ
 	}, nil
 }
 
-func (e *pgpEngine) MarshalPublicKey(key crypto.PublicKey) (string, error) {
-	pgpKey, ok := key.(*pgpPublicKey)
-	if !ok {
-		return "", ErrInvalidKey
-	}
-
-	var buf bytes.Buffer
-	if err := pgpKey.key.Serialize(&buf); err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(buf.Bytes()), nil
-}
-
-func (e *pgpEngine) UnmarshalPublicKey(key string) (crypto.PublicKey, error) {
-	raw, err := base64.RawURLEncoding.DecodeString(key)
-	if err != nil {
-		return nil, err
-	}
-	entityList, err := openpgp.ReadKeyRing(bytes.NewReader(raw))
-	if err != nil {
-		return nil, err
-	}
-	return &pgpPublicKey{
-		key: entityList[0],
-	}, nil
-}
-
-func (e *pgpEngine) MarshalPrivateKey(key crypto.PrivateKey) (string, error) {
-	pgpKey, ok := key.(*pgpPrivateKey)
-	if !ok {
-		return "", ErrInvalidKey
-	}
-
-	var buf bytes.Buffer
-	if err := pgpKey.key.SerializePrivate(&buf, &packet.Config{}); err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(buf.Bytes()), nil
-}
-
-func (e *pgpEngine) UnmarshalPrivateKey(key string) (crypto.PrivateKey, error) {
-	raw, err := base64.RawURLEncoding.DecodeString(key)
-	if err != nil {
-		return nil, err
-	}
-	entityList, err := openpgp.ReadKeyRing(bytes.NewReader(raw))
-	if err != nil {
-		return nil, err
-	}
-	return &pgpPrivateKey{
-		key: entityList[0],
-	}, nil
-}
-
-func (e *pgpEngine) MarshalPublicKeyRaw(key crypto.PublicKey) ([]byte, error) {
-	pgpKey, ok := key.(*pgpPublicKey)
-	if !ok {
-		return nil, ErrInvalidKey
-	}
-	var buf bytes.Buffer
-	if err := pgpKey.key.Serialize(&buf); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func (e *pgpEngine) UnmarshalPublicKeyRaw(key []byte) (crypto.PublicKey, error) {
-	entityList, err := openpgp.ReadKeyRing(bytes.NewReader(key))
-	if err != nil {
-		return nil, err
-	}
-	return &pgpPublicKey{
-		key: entityList[0],
-	}, nil
-}
-
-func (e *pgpEngine) MarshalPrivateKeyRaw(key crypto.PrivateKey) ([]byte, error) {
-	pgpKey, ok := key.(*pgpPrivateKey)
-	if !ok {
-		return nil, ErrInvalidKey
-	}
-	var buf bytes.Buffer
-	if err := pgpKey.key.SerializePrivate(&buf, &packet.Config{}); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func (e *pgpEngine) UnmarshalPrivateKeyRaw(key []byte) (crypto.PrivateKey, error) {
-	entityList, err := openpgp.ReadKeyRing(bytes.NewReader(key))
-	if err != nil {
-		return nil, err
-	}
-	return &pgpPrivateKey{
-		key: entityList[0],
-	}, nil
-}
-
-func (e *pgpEngine) KeyId(key crypto.PublicKey) (string, error) {
-	edkey, ok := key.(*pgpPublicKey)
-	if !ok {
-		return "", ErrInvalidKey
-	}
-	return pgpKeyId(edkey.key), nil
-}
-
 func (e *pgpEngine) KeyTypeByPublicKey(key crypto.PublicKey) (string, error) {
 	_, ok := key.(*pgpPublicKey)
 	if !ok {
@@ -212,7 +116,7 @@ func (e *pgpEngine) KeyTypeByPrivateKey(key crypto.PrivateKey) (string, error) {
 	return "pgp", nil
 }
 
-func (e *pgpEngine) NewSigner(key crypto.PrivateKey) (Signer, error) {
+func (e *pgpEngine) NewSigner(key crypto.PrivateKey, keyId string) (Signer, error) {
 	pgpKey, ok := key.(*pgpPrivateKey)
 	if !ok {
 		return nil, ErrInvalidKey
@@ -223,22 +127,33 @@ func (e *pgpEngine) NewSigner(key crypto.PrivateKey) (Signer, error) {
 		return nil, err
 	}
 
+	if keyId == "" {
+		keyId = pgpKeyId(publicKey)
+	}
+
 	return &pgpSigner{
 		key: pgpKey.key,
 		publicKey: &pgpPublicKey{
 			key: publicKey,
 		},
+		keyId: keyId,
 	}, nil
 }
 
-func (e *pgpEngine) NewVerifier(key crypto.PublicKey) (Verifier, error) {
+func (e *pgpEngine) NewVerifier(key crypto.PublicKey, keyId string) (Verifier, error) {
 	pgpKey, ok := key.(*pgpPublicKey)
 	if !ok {
 		return nil, ErrInvalidKey
 	}
+
+	if keyId == "" {
+		keyId = pgpKeyId(pgpKey.key)
+	}
+
 	return &pgpVerifier{
-		key:  pgpKey.key,
-		keys: []*openpgp.Entity{pgpKey.key},
+		key:   pgpKey.key,
+		keyId: keyId,
+		keys:  []*openpgp.Entity{pgpKey.key},
 	}, nil
 }
 
@@ -274,14 +189,6 @@ func (e *pgpVerifier) PublicKey() crypto.PublicKey {
 
 func (e *pgpVerifier) KeyId() string {
 	return pgpKeyId(e.key)
-}
-
-func (e *pgpVerifier) MarshalPublicKey() string {
-	var buf bytes.Buffer
-	if err := e.key.Serialize(&buf); err != nil {
-		return ""
-	}
-	return base64.RawURLEncoding.EncodeToString(buf.Bytes())
 }
 
 func (e *pgpVerifier) VerifyMessage(msg []byte, sig []byte) (bool, error) {

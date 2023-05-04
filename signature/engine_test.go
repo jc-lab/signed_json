@@ -1,0 +1,34 @@
+package signature
+
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
+
+type TestMessage struct {
+	Hello string `json:"hello"`
+}
+
+func commonJsonTest(t *testing.T, signer Signer, verifier Verifier, keyId string, expectedSig string) {
+	root := &SignedJson[any]{
+		Signed: &TestMessage{
+			Hello: "WORLD",
+		},
+	}
+
+	err := signer.SignJson(root)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(root.Signatures))
+
+	assert.Equal(t, keyId, root.Signatures[0].Keyid)
+	if expectedSig != "" {
+		assert.Equal(t, expectedSig, root.Signatures[0].Sig)
+	}
+
+	res, err := verifier.VerifyJson(root)
+	assert.True(t, res)
+
+	root.Signatures[0].Sig = "XXXX" + root.Signatures[0].Sig[4:]
+	res, err = verifier.VerifyJson(root)
+	assert.False(t, res)
+}

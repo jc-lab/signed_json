@@ -1,4 +1,4 @@
-package keys
+package signature
 
 import (
 	"crypto"
@@ -95,26 +95,6 @@ func NewJclabPrs2301Bls12381ResignKey(RK []byte, W1 []byte) (crypto.PrivateKey, 
 		rk:      RK,
 		w1:      W1,
 	}, nil
-}
-
-func (k *jclabPrs2301PublicKey) KeyId() string {
-	md := crypto.SHA256.New()
-	md.Write(k.w1)
-	return encode(md.Sum(nil))
-}
-
-func (k *jclabPrs2301PublicKey) MarshalPublicKey() string {
-	return encode(k.w1)
-}
-
-func (k *jclabPrs2301ResignKey) KeyId() string {
-	md := crypto.SHA256.New()
-	md.Write(k.w1)
-	return encode(md.Sum(nil))
-}
-
-func (k *jclabPrs2301ResignKey) MarshalPublicKey() string {
-	return encode(k.w1)
 }
 
 func jclabPrs2301PrivateToPublic(key *jclabPrs2301PrivateKey) *jclabPrs2301PublicKey {
