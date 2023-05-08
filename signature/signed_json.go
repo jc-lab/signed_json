@@ -2,7 +2,8 @@ package signature
 
 import (
 	"encoding/base64"
-	"github.com/secure-systems-lab/go-securesystemslib/cjson"
+	"encoding/json"
+	"github.com/gowebpki/jcs"
 )
 
 type SignedJsonSignature struct {
@@ -15,8 +16,16 @@ type SignedJson[T interface{}] struct {
 	Signatures []*SignedJsonSignature `json:"signatures"`
 }
 
+func cjson(data interface{}) ([]byte, error) {
+	first, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return jcs.Transform(first)
+}
+
 func signJson(e Signer, msg *SignedJson[any]) error {
-	encoded, err := cjson.EncodeCanonical(msg.Signed)
+	encoded, err := cjson(msg.Signed)
 	if err != nil {
 		return err
 	}
@@ -32,7 +41,7 @@ func signJson(e Signer, msg *SignedJson[any]) error {
 }
 
 func verifyJson(e Verifier, msg *SignedJson[any]) (bool, error) {
-	encoded, err := cjson.EncodeCanonical(msg.Signed)
+	encoded, err := cjson(msg.Signed)
 	if err != nil {
 		return false, err
 	}

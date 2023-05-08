@@ -32,3 +32,14 @@ func commonJsonTest(t *testing.T, signer Signer, verifier Verifier, keyId string
 	res, err = verifier.VerifyJson(root)
 	assert.False(t, res)
 }
+
+func Test_cjsonCrLf(t *testing.T) {
+	input := &TestMessage{
+		Hello: "Hello\nWorld",
+	}
+
+	output, err := cjson(input)
+	assert.Nil(t, err)
+
+	assert.Equal(t, "{\"hello\":\"Hello\\nWorld\"}", string(output))
+}
