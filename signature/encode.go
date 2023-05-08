@@ -1,11 +1,11 @@
-package keys
+package signature
 
 import "encoding/base64"
 
-func encode(input []byte) string {
+func Encode(input []byte) string {
 	return base64.RawURLEncoding.EncodeToString(input)
 }
 
-func decode(input string) ([]byte, error) {
+func Decode(input string) ([]byte, error) {
 	return base64.RawURLEncoding.DecodeString(input)
 }

@@ -1,4 +1,4 @@
-package keys
+package signature
 
 import (
 	"encoding/base64"
@@ -33,59 +33,26 @@ func Test_jclabPrs2301FirstEngine_Schema(t *testing.T) {
 	assert.Equal(t, testingJclabPrs2301FirstEngine.Schema(), "jclab-prs-2301:first")
 }
 
-func Test_jclabPrs2301FirstEngine_SignVerify(t *testing.T) {
-	privateKey, _ := NewJclabPrs2301Bls12381PrivateKey(testingJclabPrs2301Alice_S)
-
-	privateKeyImpl, _ := privateKey.(*jclabPrs2301PrivateKey)
-	assert.Equal(t, testingJclabPrs2301Alice_W1, privateKeyImpl.w1)
-
-	signer, err := testingJclabPrs2301FirstEngine.NewSigner(privateKey)
-	assert.Nil(t, err)
-
-	verifier, err := testingJclabPrs2301FirstEngine.NewVerifier(signer.PublicKey())
-	assert.Nil(t, err)
-
-	msg := []byte("foo")
-	sig, err := signer.SignMessage(msg)
-	assert.Nil(t, err)
-
-	res, err := verifier.VerifyMessage(msg, sig)
-	assert.Nil(t, err)
-	assert.True(t, res)
-
-	msg[0] ^= 0x01
-	res, err = verifier.VerifyMessage(msg, sig)
-	assert.False(t, res)
+func Test_jclabPrs2301FirstEngine_KeyTypeByPublicKey(t *testing.T) {
+	publicKey, _ := NewJclabPrs2301Bls12381PublicKey(testingJclabPrs2301Alice_W1)
+	keyType, _ := testingJclabPrs2301FirstEngine.KeyTypeByPublicKey(publicKey)
+	assert.Equal(t, "bls12-381", keyType)
 }
 
-func Test_jclabPrs2301FirstEngine_keyId(t *testing.T) {
-	publicKey, _ := NewJclabPrs2301Bls12381PublicKey(testingJclabPrs2301Alice_W1)
-
-	keyId, _ := testingJclabPrs2301FirstEngine.KeyId(publicKey)
-	assert.Equal(t, "Pwb8A6-foIGYtdXq9OhDMe8Ag2NU8BIR9VNEiJknfBc", keyId)
+func Test_jclabPrs2301FirstEngine_KeyTypeByPrivateKey(t *testing.T) {
+	privateKey, _ := NewJclabPrs2301Bls12381PrivateKey(testingJclabPrs2301Alice_S)
+	keyType, _ := testingJclabPrs2301FirstEngine.KeyTypeByPrivateKey(privateKey)
+	assert.Equal(t, "bls12-381", keyType)
 }
 
 func Test_jclabPrs2301FirstEngine_SignVerifyJson(t *testing.T) {
 	privateKey, _ := NewJclabPrs2301Bls12381PrivateKey(testingJclabPrs2301Alice_S)
 
-	signer, err := testingJclabPrs2301FirstEngine.NewSigner(privateKey)
+	signer, err := testingJclabPrs2301FirstEngine.NewSigner(privateKey, "aaaa")
 	assert.Nil(t, err)
 
-	verifier, err := testingJclabPrs2301FirstEngine.NewVerifier(signer.PublicKey())
+	verifier, err := testingJclabPrs2301FirstEngine.NewVerifier(signer.PublicKey(), "aaaa")
 	assert.Nil(t, err)
 
-	root := &SignedJson[any]{
-		Signed: &TestMessage{
-			Hello: "WORLD",
-		},
-	}
-
-	err = signer.SignJson(root)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(root.Signatures))
-
-	assert.Equal(t, "Pwb8A6-foIGYtdXq9OhDMe8Ag2NU8BIR9VNEiJknfBc", root.Signatures[0].Keyid)
-
-	res, err := verifier.VerifyJson(root)
-	assert.True(t, res)
+	commonJsonTest(t, signer, verifier, "aaaa", "")
 }
