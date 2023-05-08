@@ -2,6 +2,7 @@ package signature
 
 import (
 	"crypto"
+	"errors"
 )
 
 func init() {
@@ -95,7 +96,7 @@ func (e *jclabPrs2301FirstSigner) SignMessage(msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sig.Encode(), nil
+	return append([]byte{0x01}, sig.Encode()...), nil
 }
 
 func (e *jclabPrs2301FirstSigner) SignJson(msg *SignedJson[any]) error {
@@ -111,7 +112,11 @@ func (e *jclabPrs2301FirstVerifier) KeyId() string {
 }
 
 func (e *jclabPrs2301FirstVerifier) VerifyMessage(msg []byte, sig []byte) (bool, error) {
-	sig1 := e.key.curve.Signature1FromBytes(sig)
+	sigType := sig[0]
+	if sigType != 0x01 {
+		return false, errors.New("invalid signature")
+	}
+	sig1 := e.key.curve.Signature1FromBytes(sig[1:])
 	return e.key.curve.FirstVerify(sig1, msg, e.key.w1), nil
 }
 

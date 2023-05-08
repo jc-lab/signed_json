@@ -119,7 +119,7 @@ func (e *jclabPrs2301FinalSigner) SignJson(msg *SignedJson[any]) error {
 		if err != nil {
 			return err
 		}
-		signature.Sig = Encode(sig2.Encode())
+		signature.Sig = Encode(append([]byte{0x02}, sig2.Encode()...))
 		signature.Keyid = e.keyId
 		return nil
 	}
@@ -135,7 +135,11 @@ func (e *jclabPrs2301FinalVerifier) KeyId() string {
 }
 
 func (e *jclabPrs2301FinalVerifier) VerifyMessage(msg []byte, sig []byte) (bool, error) {
-	sig2 := e.key.curve.Signature2FromBytes(sig)
+	sigType := sig[0]
+	if sigType != 0x02 {
+		return false, errors.New("invalid signature")
+	}
+	sig2 := e.key.curve.Signature2FromBytes(sig[1:])
 	return e.key.curve.Verify(sig2, msg, e.key.w1), nil
 }
 
