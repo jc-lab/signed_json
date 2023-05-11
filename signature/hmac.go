@@ -23,14 +23,16 @@ type hmacEngine struct {
 
 type hmacSigner struct {
 	Signer
-	key   *HmacKey
-	keyId string
+	engine Engine
+	key    *HmacKey
+	keyId  string
 }
 
 type hmacVerifier struct {
 	Verifier
-	key   *HmacKey
-	keyId string
+	engine Engine
+	key    *HmacKey
+	keyId  string
 }
 
 type HmacKey struct {
@@ -64,8 +66,9 @@ func (e *hmacEngine) NewSigner(key crypto.PrivateKey, keyId string) (Signer, err
 		return nil, ErrInvalidKey
 	}
 	return &hmacSigner{
-		key:   hmacKey,
-		keyId: keyId,
+		engine: e,
+		key:    hmacKey,
+		keyId:  keyId,
 	}, nil
 }
 
@@ -75,9 +78,14 @@ func (e *hmacEngine) NewVerifier(key crypto.PublicKey, keyId string) (Verifier, 
 		return nil, ErrInvalidKey
 	}
 	return &hmacVerifier{
-		key:   hmacKey,
-		keyId: keyId,
+		engine: e,
+		key:    hmacKey,
+		keyId:  keyId,
 	}, nil
+}
+
+func (e *hmacSigner) Engine() Engine {
+	return e.engine
 }
 
 func (e *hmacSigner) PrivateKey() crypto.PrivateKey {
@@ -98,6 +106,10 @@ func (e *hmacSigner) SignMessage(msg []byte) ([]byte, error) {
 
 func (e *hmacSigner) SignJson(msg *SignedJson[any]) error {
 	return signJson(e, msg)
+}
+
+func (e *hmacVerifier) Engine() Engine {
+	return e.engine
 }
 
 func (e *hmacVerifier) PublicKey() crypto.PublicKey {

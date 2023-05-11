@@ -32,14 +32,16 @@ type jclabPrs2301FinalPublicKey struct {
 
 type jclabPrs2301FinalSigner struct {
 	Signer
-	key   *JclabPrs2301ResignKey
-	keyId string
+	engine Engine
+	key    *JclabPrs2301ResignKey
+	keyId  string
 }
 
 type jclabPrs2301FinalVerifier struct {
 	Verifier
-	key   *JclabPrs2301PublicKey
-	keyId string
+	engine Engine
+	key    *JclabPrs2301PublicKey
+	keyId  string
 }
 
 func (e *jclabPrs2301FinalEngine) Schema() string {
@@ -76,8 +78,9 @@ func (e *jclabPrs2301FinalEngine) NewSigner(key crypto.PrivateKey, keyId string)
 		return nil, ErrInvalidKey
 	}
 	return &jclabPrs2301FinalSigner{
-		key:   keyImpl,
-		keyId: keyId,
+		engine: e,
+		key:    keyImpl,
+		keyId:  keyId,
 	}, nil
 }
 
@@ -87,9 +90,14 @@ func (e *jclabPrs2301FinalEngine) NewVerifier(key crypto.PublicKey, keyId string
 		return nil, ErrInvalidKey
 	}
 	return &jclabPrs2301FinalVerifier{
-		key:   keyImpl,
-		keyId: keyId,
+		engine: e,
+		key:    keyImpl,
+		keyId:  keyId,
 	}, nil
+}
+
+func (e *jclabPrs2301FinalSigner) Engine() Engine {
+	return e.engine
 }
 
 func (e *jclabPrs2301FinalSigner) PrivateKey() crypto.PrivateKey {
@@ -124,6 +132,10 @@ func (e *jclabPrs2301FinalSigner) SignJson(msg *SignedJson[any]) error {
 		return nil
 	}
 	return errors.New("input json is not signed")
+}
+
+func (e *jclabPrs2301FinalVerifier) Engine() Engine {
+	return e.engine
 }
 
 func (e *jclabPrs2301FinalVerifier) PublicKey() crypto.PublicKey {

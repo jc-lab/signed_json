@@ -32,6 +32,7 @@ type pgpPublicKey struct {
 
 type pgpSigner struct {
 	Signer
+	engine    Engine
 	key       *openpgp.Entity
 	publicKey *pgpPublicKey
 	keyId     string
@@ -39,9 +40,10 @@ type pgpSigner struct {
 
 type pgpVerifier struct {
 	Verifier
-	key   *openpgp.Entity
-	keys  openpgp.EntityList
-	keyId string
+	engine Engine
+	key    *openpgp.Entity
+	keys   openpgp.EntityList
+	keyId  string
 }
 
 func ReadPgpArmorPrivateKey(input string) (crypto.PrivateKey, error) {
@@ -132,7 +134,8 @@ func (e *pgpEngine) NewSigner(key crypto.PrivateKey, keyId string) (Signer, erro
 	}
 
 	return &pgpSigner{
-		key: pgpKey.key,
+		engine: e,
+		key:    pgpKey.key,
 		publicKey: &pgpPublicKey{
 			key: publicKey,
 		},
@@ -151,10 +154,15 @@ func (e *pgpEngine) NewVerifier(key crypto.PublicKey, keyId string) (Verifier, e
 	}
 
 	return &pgpVerifier{
-		key:   pgpKey.key,
-		keyId: keyId,
-		keys:  []*openpgp.Entity{pgpKey.key},
+		engine: e,
+		key:    pgpKey.key,
+		keyId:  keyId,
+		keys:   []*openpgp.Entity{pgpKey.key},
 	}, nil
+}
+
+func (e *pgpSigner) Engine() Engine {
+	return e.engine
 }
 
 func (e *pgpSigner) PrivateKey() crypto.PrivateKey {
@@ -181,6 +189,10 @@ func (e *pgpSigner) SignMessage(msg []byte) ([]byte, error) {
 
 func (e *pgpSigner) SignJson(msg *SignedJson[any]) error {
 	return signJson(e, msg)
+}
+
+func (e *pgpVerifier) Engine() Engine {
+	return e.engine
 }
 
 func (e *pgpVerifier) PublicKey() crypto.PublicKey {

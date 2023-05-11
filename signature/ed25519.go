@@ -22,14 +22,16 @@ type ed25519Engine struct {
 
 type ed25519Signer struct {
 	Signer
-	key   ed25519.PrivateKey
-	keyId string
+	engine Engine
+	key    ed25519.PrivateKey
+	keyId  string
 }
 
 type ed25519Verifier struct {
 	Verifier
-	key   ed25519.PublicKey
-	keyId string
+	engine Engine
+	key    ed25519.PublicKey
+	keyId  string
 }
 
 func NewEd25519PrivateKeyFromRaw(key []byte) (ed25519.PrivateKey, error) {
@@ -71,8 +73,9 @@ func (e *ed25519Engine) NewSigner(key crypto.PrivateKey, keyId string) (Signer, 
 		return nil, ErrInvalidKey
 	}
 	return &ed25519Signer{
-		key:   edkey,
-		keyId: keyId,
+		engine: e,
+		key:    edkey,
+		keyId:  keyId,
 	}, nil
 }
 
@@ -82,9 +85,14 @@ func (e *ed25519Engine) NewVerifier(key crypto.PublicKey, keyId string) (Verifie
 		return nil, ErrInvalidKey
 	}
 	return &ed25519Verifier{
-		key:   edkey,
-		keyId: keyId,
+		engine: e,
+		key:    edkey,
+		keyId:  keyId,
 	}, nil
+}
+
+func (e *ed25519Signer) Engine() Engine {
+	return e.engine
 }
 
 func (e *ed25519Signer) PrivateKey() crypto.PrivateKey {
@@ -105,6 +113,10 @@ func (e *ed25519Signer) SignMessage(msg []byte) ([]byte, error) {
 
 func (e *ed25519Signer) SignJson(msg *SignedJson[any]) error {
 	return signJson(e, msg)
+}
+
+func (e *ed25519Verifier) Engine() Engine {
+	return e.engine
 }
 
 func (e *ed25519Verifier) PublicKey() crypto.PublicKey {
