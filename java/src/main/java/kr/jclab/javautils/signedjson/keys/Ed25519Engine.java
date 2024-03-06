@@ -6,6 +6,7 @@ import kr.jclab.javautils.signedjson.StaticHolder;
 import kr.jclab.javautils.signedjson.Verifier;
 import kr.jclab.javautils.signedjson.exception.InvalidKeyException;
 import kr.jclab.javautils.signedjson.util.HashUtil;
+import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.jcajce.spec.RawEncodedKeySpec;
 import org.bouncycastle.math.ec.rfc8032.Ed25519;
@@ -40,7 +41,13 @@ public class Ed25519Engine implements KeyEngine {
 
     @Override
     public Signer newSigner(PrivateKey privateKey) throws InvalidKeyException {
-        return null;
+        BCEdDSAPrivateKey bcPrivateKey = toBCEdDSAPrivateKey(privateKey);
+        try {
+            Signature.getInstance("Ed25519", StaticHolder.getBcProvider());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        return new DefaultJcaSigner(this, privateKey, bcPrivateKey.getPublicKey(), () -> Signature.getInstance("Ed25519", StaticHolder.getBcProvider()));
     }
 
     @Override
@@ -65,5 +72,12 @@ public class Ed25519Engine implements KeyEngine {
             throw new InvalidKeyException("unknown class: " + publicKey.getClass().getName());
         }
         return (BCEdDSAPublicKey) publicKey;
+    }
+
+    static BCEdDSAPrivateKey toBCEdDSAPrivateKey(PrivateKey privateKey) throws InvalidKeyException {
+        if (!(privateKey instanceof BCEdDSAPrivateKey)) {
+            throw new InvalidKeyException("unknown class: " + privateKey.getClass().getName());
+        }
+        return (BCEdDSAPrivateKey) privateKey;
     }
 }
